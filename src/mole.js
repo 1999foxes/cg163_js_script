@@ -37,7 +37,7 @@ class FishDetector extends GameScript {
     }
 
     getGreenRect() {
-        let config = {lowH: 59, lowS: 108, lowV: 145, highH: 81, highS: 192, highV: 226};
+        let config = {lowH: 60, lowS: 90, lowV: 135, highH: 85, highS: 255, highV: 255};
         let result = this.inRange(config);
         let rect = null;
         if (result.area > 100) {
@@ -56,7 +56,8 @@ class FishDetector extends GameScript {
     }
 
     hasFishInRect(rect) {
-        let fish = this.inRange({lowH: 90, lowS: 77, lowV: 96, highH: 117, highS: 166, highV: 163, rect: rect});
+        // let fish = this.inRange({lowH: 95, lowS: 77, lowV: 96, highH: 117, highS: 166, highV: 255, rect: rect});
+        let fish = this.inRange({lowH: 86, lowS: 77, lowV: 180, highH: 117, highS: 166, highV: 220, rect: rect});
 
         for (i in fish) {
             if (i && i.delete) {

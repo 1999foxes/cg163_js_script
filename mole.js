@@ -55,7 +55,7 @@ var FishDetector = function (_GameScript) {
     }, {
         key: 'getGreenRect',
         value: function getGreenRect() {
-            var config = { lowH: 59, lowS: 108, lowV: 145, highH: 81, highS: 192, highV: 226 };
+            var config = { lowH: 60, lowS: 90, lowV: 135, highH: 85, highS: 255, highV: 255 };
             var result = this.inRange(config);
             var rect = null;
             if (result.area > 100) {
@@ -75,7 +75,8 @@ var FishDetector = function (_GameScript) {
     }, {
         key: 'hasFishInRect',
         value: function hasFishInRect(rect) {
-            var fish = this.inRange({ lowH: 90, lowS: 77, lowV: 96, highH: 117, highS: 166, highV: 163, rect: rect });
+            // let fish = this.inRange({lowH: 95, lowS: 77, lowV: 96, highH: 117, highS: 166, highV: 255, rect: rect});
+            var fish = this.inRange({ lowH: 86, lowS: 77, lowV: 180, highH: 117, highS: 166, highV: 220, rect: rect });
 
             for (i in fish) {
                 if (i && i.delete) {

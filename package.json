@@ -1,0 +1,24 @@
+{
+  "name": "cg163_js_script",
+  "version": "1.0.0",
+  "description": "网易云游戏的摩尔庄园钓鱼前端脚本",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1999foxes/cg163_js_script.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/1999foxes/cg163_js_script/issues"
+  },
+  "homepage": "https://github.com/1999foxes/cg163_js_script#readme",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-react-app": "^3.1.2"
+  }
+}

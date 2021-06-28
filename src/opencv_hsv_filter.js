@@ -1,6 +1,3 @@
-var opencvjs = ['https://docs.opencv.org/3.4.0/opencv.js'];
-loadDependency(opencvjs, () => initScript(<CVHsvFilter></CVHsvFilter>));
-
 class CVHsvFilter extends React.Component {
     constructor(props) {
         super(props);
@@ -132,3 +129,6 @@ class CVHsvFilter extends React.Component {
         );
     }
 }
+
+
+initScript(<CVHsvFilter></CVHsvFilter>);
