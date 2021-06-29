@@ -176,7 +176,7 @@ function start() {
                         null,
                         '\u9009\u62E9\u8981\u6CE8\u5165\u7684\u811A\u672C\u6587\u4EF6\uFF1A'
                     ),
-                    React.createElement('input', { type: 'file', accept: '.js', onChange: this.runJsFromFile.bind(this) })
+                    React.createElement('input', { type: 'file', onChange: this.runJsFromFile.bind(this) })
                 );
             }
         }]);

@@ -104,7 +104,7 @@ function start() {
         render() {
             return <div>
                     <label>选择要注入的脚本文件：</label>
-                    <input type='file' accept='.js' onChange={this.runJsFromFile.bind(this)}></input>
+                    <input type='file' onChange={this.runJsFromFile.bind(this)}></input>
                 </div>;
         }
     }
