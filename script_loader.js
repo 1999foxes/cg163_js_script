@@ -162,6 +162,8 @@ function start() {
                         }
                     }
                 }
+
+                e.target.value = '';
             }
         }, {
             key: 'render',
@@ -214,6 +216,8 @@ function start() {
         }, {
             key: 'render',
             value: function render() {
+                var _this4 = this;
+
                 return React.createElement(
                     'div',
                     null,
@@ -222,6 +226,13 @@ function start() {
                         'label',
                         null,
                         '\u663E\u793A\u811A\u672C\u9762\u677F'
+                    ),
+                    React.createElement(
+                        'button',
+                        { onClick: function onClick() {
+                                return _this4.setState({ scriptElements: [] });
+                            } },
+                        '\u6E05\u7A7A\u811A\u672C'
                     ),
                     React.createElement(JsFileInput, null),
                     React.createElement(

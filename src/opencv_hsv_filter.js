@@ -1,48 +1,76 @@
-class CVHsvFilter extends React.Component {
+function logHSV(hsv) {
+    console.log(hsv);
+}
+
+class CVHsvFilter extends GameScript {
     constructor(props) {
         super(props);
-        // this.state = {lowH: 0, lowS: 0, lowV: 0, highH: 256, highS: 256, highV: 256};
-        // this.state = {lowH: 26, lowS: 153, lowV: 217, highH: 30, highS: 256, highV: 256};
-        // this.state = {lowH: 59, lowS: 108, lowV: 145, highH: 81, highS: 192, highV: 226, displayCnt: false};
-        this.state = {lowH: 90, lowS: 77, lowV: 96, highH: 117, highS: 166, highV: 163, displayCnt: false};
         this.src = null;
+        this.DISPLAY_MODE = {SRC: 0, INRANGE: 1, CNT: 2};
+        this.rectList = [];
+        this.rectListMaxLength = 1;
+        this.isMouseDown = false;
     }
 
-    srcImgOnload(e) {
-        if (this.src) {
-            this.src.delete();
+    initState() {
+        this.state = {lowH: 0, lowS: 0, lowV: 0, highH: 256, highS: 256, highV: 256, displayMode: 0};
+    }
+
+    update() {
+        if (!this.state.isPaused) {
+            this.captureVideoMat();
         }
-        img = cv.imread(e.target);
-        this.src = this.resize(img, 500);
-        img.delete();
-        this.inRange();
-    }
 
-    resize(src, width) {
-        let dst = new cv.Mat();
-        let dsize = new cv.Size(width, src.rows / src.cols * width);
-        cv.resize(src, dst, dsize, 0, 0, cv.INTER_AREA);
-        return dst;
+        let src = this.mat.clone();
+        let dst1 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+        let dst2 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+        this.inHSVRange(src, dst1);
+        let area = this.getArea(dst1, dst2);
+
+        if (this.state.displayMode == this.DISPLAY_MODE.SRC) {
+            this.show(src);
+        } else if (this.state.displayMode == this.DISPLAY_MODE.INRANGE) {
+            this.show(dst1);
+        } else if (this.state.displayMode == this.DISPLAY_MODE.CNT) {
+            this.show(dst2);
+        }
+
+        src.delete();
+        dst1.delete();
+        dst2.delete();
+
+        const ctx = this.canvasOutput.getContext('2d');
+        this.rectList.forEach(r => ctx.rect(...Object.values(r)));
+        ctx.strokeStyle = 'green';
+        ctx.stroke();
+
+        this.setState({info: '' + area})
     }
 
     show(dst) {
         cv.imshow('canvasOutput', dst);
     }
 
-    inRange() {
+    inHSVRange(src, dst, HSVRange=this.state) {
         let bgr = new cv.Mat();
-        cv.cvtColor(this.src, bgr, cv.COLOR_RGBA2BGR, 0);
+        cv.cvtColor(src, bgr, cv.COLOR_RGBA2BGR, 0);
 
         let hsv = new cv.Mat();
         cv.cvtColor(bgr, hsv, cv.COLOR_BGR2HSV, 0);
 
-        let inr = new cv.Mat();
-        let low = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [this.state.lowH, this.state.lowS, this.state.lowV, 0]);
-        let high = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [this.state.highH, this.state.highS, this.state.highV, 0]);
-        cv.inRange(hsv, low, high, inr);
+        let low = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [HSVRange.lowH, HSVRange.lowS, HSVRange.lowV, 0]);
+        let high = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [HSVRange.highH, HSVRange.highS, HSVRange.highV, 0]);
+        cv.inRange(hsv, low, high, dst);
 
+        bgr.delete();
+        hsv.delete();
+        low.delete();
+        high.delete();
+    }
+
+    getArea(src, dst) {
         let can = new cv.Mat();
-        cv.Canny(inr, can, 300, 0, 3, false);
+        cv.Canny(src, can, 300, 0, 3, false);
 
         let dil = new cv.Mat();
         let M = cv.Mat.ones(10, 10, cv.CV_8U);
@@ -52,51 +80,91 @@ class CVHsvFilter extends React.Component {
         let ero = new cv.Mat();
         cv.erode(dil, ero, M, anchor, 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
 
-        // this.show(ero);
-
-        let dst = cv.Mat.zeros(ero.rows, ero.cols, cv.CV_8UC3);
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
         cv.findContours(ero, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
-        if (contours.size() == 0) {
-            console.log('no contours found');
-        } else {
-            let maxCntIndex, maxArea = 0;
-            for (let i = 0; i < contours.size(); ++i) {
-                const cnt = contours.get(i);
-                const area = cv.contourArea(cnt);
-                if (area > maxArea) {
-                    maxCntIndex = i;
-                    maxArea = area;
-                }
+        let maxCntIndex = -1, maxArea = 0;
+        for (let i = 0; i < contours.size(); ++i) {
+            const cnt = contours.get(i);
+            const area = cv.contourArea(cnt);
+            if (area > maxArea) {
+                maxCntIndex = i;
+                maxArea = area;
             }
+        }
 
+        if (maxCntIndex != -1) {
             let color = new cv.Scalar(255, 255, 255);
             cv.drawContours(dst, contours, maxCntIndex, color, 1, cv.LINE_8, hierarchy, 100);
         }
 
-        if (this.state.displayCnt)
-            this.show(dst);
-        else
-            this.show(inr);
-
-        bgr.delete();
-        hsv.delete();
-        low.delete();
-        high.delete();
-        inr.delete();
         can.delete();
         dil.delete();
         M.delete();
         ero.delete();
-        dst.delete();
+        contours.delete();
         hierarchy.delete();
+
+        return maxArea;
+    }
+
+    getHSVRangeOfRectList() {
+        const hsvRange = {lowH: -1, lowS: -1, lowV: -1, highH: 256, highS: 256, highV: 256};
+        let threshold = 1;
+
+        for (const arg of Object.keys(hsvRange)) {
+            threshold *= 0.7;
+            const areaAll = this.rectList.reduce((sum, rect) => sum + rect.width * rect.height, 0);
+            let area = areaAll;
+            let nextHsvRange = {...hsvRange};
+            while(area / areaAll > threshold) {
+                Object.assign(hsvRange, nextHsvRange);
+                area = 0;
+                nextHsvRange[arg] += (arg.includes('low')? 1: -1);
+                if (nextHsvRange[arg] < 0 || nextHsvRange[arg] > 255) {
+                    break;
+                }
+                for (const rect of this.rectList) {
+                    let src = this.mat.roi(rect);
+                    let dst1 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+                    this.inHSVRange(src, dst1, nextHsvRange);
+                    dst1.data8S.forEach(i => area += (i === -1));
+                    src.delete();
+                    dst1.delete();
+                }
+            }
+        }
+
+        this.setState(hsvRange);
     }
 
     handleRangeChange(e) {
         this.setState({[e.target.name]: parseInt(e.target.value)});
-        this.inRange();
+    }
+
+    handleCanvasMouseDown(e) {
+        if (this.rectList.length >= this.rectListMaxLength) {
+            this.rectList.pop();
+        }
+
+        const canvasRect = this.canvasOutput.getBoundingClientRect();
+        this.rectList.push(new cv.Rect(e.clientX - canvasRect.x, e.clientY - canvasRect.y, 1, 1));
+        this.isMouseDown = true;
+    }
+
+    handleCanvasMouseMove(e) {
+        if (!this.isMouseDown) {
+            return;
+        }
+        const canvasRect = this.canvasOutput.getBoundingClientRect();
+        const rect = this.rectList[this.rectList.length - 1];
+        Object.assign(rect, {width: e.clientX - canvasRect.x - rect.x, height: e.clientY - canvasRect.y - rect.y});
+    }
+
+    handleCanvasMouseUp(e) {
+        this.isMouseDown = false;
+        console.log(this.rectList);
     }
 
     render() {
@@ -104,13 +172,13 @@ class CVHsvFilter extends React.Component {
             <div>
                 <div>
                     <div>
-                        <img style={{display: 'none'}} id='imageSrc' alt='No Image' src={this.state.srcImg || null} onLoad={this.srcImgOnload.bind(this)}/>
-                        <div>
-                            <input type='file' id='fileInput' name='file' onChange={e => this.setState({srcImg: URL.createObjectURL(e.target.files[0])})} />
-                        </div>
-                    </div>
-                    <div>
-                        <canvas id='canvasOutput'></canvas>
+                        <canvas id='canvasOutput' 
+                            onMouseDown={this.handleCanvasMouseDown.bind(this)} 
+                            onMouseMove={this.handleCanvasMouseMove.bind(this)} 
+                            onMouseUp={this.handleCanvasMouseUp.bind(this)} 
+                            ref={node => this.canvasOutput = node}
+                        >
+                        </canvas>
                     </div>
                     <div>
                         {['lowH', 'lowS', 'lowV', 'highH', 'highS', 'highV'].map(name => {
@@ -121,8 +189,12 @@ class CVHsvFilter extends React.Component {
                                 </div>
                             );
                         })}
-                        <button onClick={() => this.setState(prevState => ({displayCnt: !prevState.displayCnt}), this.inRange.bind(this))}>displayCnt:{'' + this.state.displayCnt}</button>
-                        <button onClick={() => console.log(this.state)}>log</button>
+                        <button onClick={() => this.setState(prevState => ({isPaused: !prevState.isPaused}))}>{this.state.isPaused? 'continue': 'pause'}</button>
+                        <button onClick={() => this.rectList = []}>clear brush</button>
+                        <button onClick={() => this.getHSVRangeOfRectList()}>get hsv range of brush</button>
+                        <button onClick={() => this.setState(prevState => ({displayMode: (prevState.displayMode + 1) % 3}))}>displayMode:{'' + this.state.displayMode}</button>
+                        <button onClick={() => this.props.exporter(this.state)}>export</button>
+                        <p>{this.state.info}</p>
                     </div>
                 </div>
             </div>
@@ -131,4 +203,4 @@ class CVHsvFilter extends React.Component {
 }
 
 
-initScript(<CVHsvFilter></CVHsvFilter>);
+initScript(<CVHsvFilter exporter={logHSV}></CVHsvFilter>);

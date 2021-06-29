@@ -97,6 +97,8 @@ function start() {
                 s.src = URL.createObjectURL(file);
                 document.body.appendChild(s);
             }
+
+            e.target.value = '';
         }
 
         render() {
@@ -132,6 +134,7 @@ function start() {
             return <div>
                     <input type='checkbox' name='visibility' checked={this.state.visibility} onChange={this.handleInputChange.bind(this)}></input>
                     <label>显示脚本面板</label>
+                    <button onClick={() => this.setState({scriptElements: []})}>清空脚本</button>
                     <JsFileInput></JsFileInput>
                     <div id='scriptContainer' style={{display: this.state.visibility? 'block' : 'none'}}>
                         {this.state.scriptElements}
