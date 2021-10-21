@@ -52,15 +52,18 @@ function start() {
         render() {
             console.error('render not implemented');
         }
-        
-        pressKey(key) {
+
+        keydown(key) {
             const eventKeydown = new KeyboardEvent("keydown", {
                 bubbles : true,
                 cancelable : true,
                 key : key,
                 shiftKey : false
             });
-    
+            document.body.dispatchEvent(eventKeydown)
+        }
+
+        keyup(key) {
             const eventKeyup = new KeyboardEvent("keyup", {
                 bubbles : true,
                 cancelable : true,
@@ -68,8 +71,57 @@ function start() {
                 shiftKey : false
             });
             
-            setTimeout(() => document.body.dispatchEvent(eventKeydown), 0);
-            setTimeout(() => document.body.dispatchEvent(eventKeyup), 5);
+            document.body.dispatchEvent(eventKeyup);
+        }
+        
+        pressKey(key) {
+            setTimeout(() => this.keydown(key), 0);
+            setTimeout(() => this.keyup(key), 5);
+        }
+
+        convertPixelCoordinates2ClientXY(x, y) {
+            const videoRect = this.video.getBoundingClientRect();
+            return [
+                x / this.captureVideoCanvas.width * videoRect.width + videoRect.left,
+                y / this.captureVideoCanvas.height * videoRect.height + videoRect.top,
+            ]
+        }
+
+        convertClientXY2PixelCoordinates(x, y) {
+            const videoRect = this.video.getBoundingClientRect();
+            x -= videoRect.left;
+            y -= videoRect.top;
+            return [
+                x * this.captureVideoCanvas.width / videoRect.width,
+                y * this.captureVideoCanvas.height / videoRect.height,
+            ]
+        }
+
+        mousedown(x, y) {
+            const event = new MouseEvent("mousedown", {
+                bubbles : true,
+                cancelable : true,
+                clientX: x,
+                clientY: y,
+            });
+    
+            this.video.dispatchEvent(event);
+        }
+
+        mouseup(x, y) {
+            const event = new MouseEvent("mouseup", {
+                bubbles : true,
+                cancelable : true,
+                clientX: x,
+                clientY: y,
+            });
+    
+            this.video.dispatchEvent(event);
+        }
+
+        touch(x, y) {
+            setTimeout(() => this.touchStart(x, y), 0);
+            setTimeout(() => this.touchStop(x, y), 5);
         }
         
         captureVideo(width=200) {

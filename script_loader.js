@@ -77,15 +77,19 @@ function start() {
                 console.error('render not implemented');
             }
         }, {
-            key: 'pressKey',
-            value: function pressKey(key) {
+            key: 'keydown',
+            value: function keydown(key) {
                 var eventKeydown = new KeyboardEvent("keydown", {
                     bubbles: true,
                     cancelable: true,
                     key: key,
                     shiftKey: false
                 });
-
+                document.body.dispatchEvent(eventKeydown);
+            }
+        }, {
+            key: 'keyup',
+            value: function keyup(key) {
                 var eventKeyup = new KeyboardEvent("keyup", {
                     bubbles: true,
                     cancelable: true,
@@ -93,11 +97,68 @@ function start() {
                     shiftKey: false
                 });
 
+                document.body.dispatchEvent(eventKeyup);
+            }
+        }, {
+            key: 'pressKey',
+            value: function pressKey(key) {
+                var _this2 = this;
+
                 setTimeout(function () {
-                    return document.body.dispatchEvent(eventKeydown);
+                    return _this2.keydown(key);
                 }, 0);
                 setTimeout(function () {
-                    return document.body.dispatchEvent(eventKeyup);
+                    return _this2.keyup(key);
+                }, 5);
+            }
+        }, {
+            key: 'convertPixelCoordinates2ClientXY',
+            value: function convertPixelCoordinates2ClientXY(x, y) {
+                var videoRect = this.video.getBoundingClientRect();
+                return [x / this.captureVideoCanvas.width * videoRect.width + videoRect.left, y / this.captureVideoCanvas.height * videoRect.height + videoRect.top];
+            }
+        }, {
+            key: 'convertClientXY2PixelCoordinates',
+            value: function convertClientXY2PixelCoordinates(x, y) {
+                var videoRect = this.video.getBoundingClientRect();
+                x -= videoRect.left;
+                y -= videoRect.top;
+                return [x * this.captureVideoCanvas.width / videoRect.width, y * this.captureVideoCanvas.height / videoRect.height];
+            }
+        }, {
+            key: 'mousedown',
+            value: function mousedown(x, y) {
+                var event = new MouseEvent("mousedown", {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y
+                });
+
+                this.video.dispatchEvent(event);
+            }
+        }, {
+            key: 'mouseup',
+            value: function mouseup(x, y) {
+                var event = new MouseEvent("mouseup", {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y
+                });
+
+                this.video.dispatchEvent(event);
+            }
+        }, {
+            key: 'touch',
+            value: function touch(x, y) {
+                var _this3 = this;
+
+                setTimeout(function () {
+                    return _this3.touchStart(x, y);
+                }, 0);
+                setTimeout(function () {
+                    return _this3.touchStop(x, y);
                 }, 5);
             }
         }, {
@@ -190,11 +251,11 @@ function start() {
         function ScriptContainer(props) {
             _classCallCheck(this, ScriptContainer);
 
-            var _this3 = _possibleConstructorReturn(this, (ScriptContainer.__proto__ || Object.getPrototypeOf(ScriptContainer)).call(this, props));
+            var _this5 = _possibleConstructorReturn(this, (ScriptContainer.__proto__ || Object.getPrototypeOf(ScriptContainer)).call(this, props));
 
-            _this3.state = { visibility: true, scriptElements: [] };
-            window.initScript = _this3.initScript.bind(_this3);
-            return _this3;
+            _this5.state = { visibility: true, scriptElements: [] };
+            window.initScript = _this5.initScript.bind(_this5);
+            return _this5;
         }
 
         _createClass(ScriptContainer, [{
@@ -216,7 +277,7 @@ function start() {
         }, {
             key: 'render',
             value: function render() {
-                var _this4 = this;
+                var _this6 = this;
 
                 return React.createElement(
                     'div',
@@ -230,7 +291,7 @@ function start() {
                     React.createElement(
                         'button',
                         { onClick: function onClick() {
-                                return _this4.setState({ scriptElements: [] });
+                                return _this6.setState({ scriptElements: [] });
                             } },
                         '\u6E05\u7A7A\u811A\u672C'
                     ),
